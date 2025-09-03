@@ -40,9 +40,6 @@ application-*.yml
 .claude/*.log                # Log files
 .claude/sessions/current-*   # Current session files
 
-# Keep case-sensitive Claude.md excluded (if it exists)
-Claude.md
-
 # Environment and secrets
 .env
 .env.local
