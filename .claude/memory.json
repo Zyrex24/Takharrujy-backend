@@ -1,0 +1,437 @@
+{
+  "project": {
+    "name": "Takharrujy Platform",
+    "description": "University Graduation Project Management Platform",
+    "version": "1.0",
+    "created": "2024-12-01T10:30:00Z",
+    "lastUpdated": "2024-12-01T10:30:00Z",
+    "memoryVersion": "1.0",
+    "team": {
+      "size": 2,
+      "roles": ["Senior Backend Developer", "Mid-Level Backend Developer"],
+      "methodology": "Agile/Scrum",
+      "timeline": "3 weeks (2 weeks Sprint 1 + 1 week Sprint 1.5)"
+    }
+  },
+  "knowledge": {
+    "domain": {
+      "university_management": {
+        "concepts": [
+          "graduation project lifecycle",
+          "supervisor-student relationships", 
+          "academic evaluation processes",
+          "multi-tenant university system",
+          "FERPA compliance requirements"
+        ],
+        "entities": [
+          "universities",
+          "users (students, supervisors, admins)",
+          "projects",
+          "tasks", 
+          "deliverables",
+          "files",
+          "notifications",
+          "messages"
+        ],
+        "business_rules": [
+          "Row-level security for multi-tenancy",
+          "Arabic language primary support",
+          "University email domain validation",
+          "Project team size limits (max 4 students)",
+          "Supervisor workload limits (max 12 projects)"
+        ]
+      },
+      "technical": {
+        "architecture": "modular monolithic",
+        "stack": [
+          "Java 24 with Project Loom (Virtual Threads)",
+          "Spring Boot 3.4.x with Spring 6.2.x",
+          "PostgreSQL 16.x with advanced features",
+          "Redis 7.x for caching and sessions",
+          "Maven for build management",
+          "Docker for containerization"
+        ],
+        "patterns": [
+          "Domain-Driven Design (DDD)",
+          "Layered Architecture (Presentation, Application, Domain, Infrastructure)",
+          "CQRS for complex queries",
+          "Event-driven architecture for async operations",
+          "RESTful API design with OpenAPI"
+        ],
+        "external_services": [
+          "Azure Blob Storage / DigitalOcean Spaces (file storage)",
+          "Brevo SMTP / SendGrid / AWS SES (email)",
+          "Azure Communication Services (SMS)",
+          "Virus scanning service for file uploads"
+        ]
+      },
+      "arabic_language": {
+        "requirements": [
+          "RTL (Right-to-Left) text support",
+          "Arabic character validation and normalization",
+          "Bilingual UI (Arabic primary, English secondary)",
+          "Arabic date/time formatting",
+          "Arabic text search and sorting"
+        ],
+        "implementation": [
+          "UTF-8 encoding throughout the system",
+          "Custom validation for Arabic text fields",
+          "i18n message bundles for Arabic/English",
+          "Database collation for Arabic text sorting",
+          "Frontend RTL CSS framework integration"
+        ]
+      }
+    }
+  },
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "date": "2024-12-01",
+      "title": "Package Structure Standardization",
+      "decision": "Use com.university.takharrujy.* for all Java packages",
+      "rationale": "Consistent naming convention and proper Spring component scanning configuration",
+      "alternatives_considered": [
+        "com.university.pm.* (too generic)",
+        "com.takharrujy.* (missing university context)"
+      ],
+      "status": "approved",
+      "impact": "high",
+      "affected_components": ["all Java classes", "Spring configuration", "package scanning"]
+    },
+    {
+      "id": "DEC-002", 
+      "date": "2024-12-01",
+      "title": "Sprint Timeline Standardization",
+      "decision": "Sprint 1: 2 weeks (120 story points), Sprint 1.5: 1 week (60 story points)",
+      "rationale": "Realistic timeline for 180 total story points with 2 developers at 30 points per week each",
+      "alternatives_considered": [
+        "Sprint 1: 1 week (unrealistic for scope)",
+        "Sprint 1: 3 weeks (extends timeline unnecessarily)"
+      ],
+      "status": "approved",
+      "impact": "medium",
+      "affected_components": ["work division", "sprint planning", "deliverable scheduling"]
+    },
+    {
+      "id": "DEC-003",
+      "date": "2024-12-01", 
+      "title": "File Upload Size Limit Standardization",
+      "decision": "100MB maximum file upload size across all endpoints",
+      "rationale": "Supports large academic documents while maintaining reasonable server resource usage",
+      "alternatives_considered": [
+        "50MB limit (too restrictive for academic content)",
+        "No limit (resource and security concerns)"
+      ],
+      "status": "approved",
+      "impact": "low",
+      "affected_components": ["file upload validation", "storage configuration", "API documentation"]
+    },
+    {
+      "id": "DEC-004",
+      "date": "2024-12-01",
+      "title": "Postman Testing Requirements",
+      "decision": "Mandatory Postman collections for each of the 87 API endpoints with environment files",
+      "rationale": "Ensures comprehensive API testing with Arabic language support and automated validation",
+      "alternatives_considered": [
+        "Single master collection (difficult to manage)",
+        "No Postman requirement (reduces testing coverage)"
+      ],
+      "status": "approved",
+      "impact": "medium",
+      "affected_components": ["API testing", "development workflow", "quality assurance"]
+    }
+  ],
+  "patterns": {
+    "authentication": {
+      "type": "JWT Bearer Token",
+      "implementation": "Spring Security 6.x",
+      "features": [
+        "Role-based access control (RBAC)",
+        "Refresh token mechanism", 
+        "Redis session storage",
+        "University domain email validation",
+        "Password strength requirements"
+      ],
+      "security_measures": [
+        "bcrypt password hashing",
+        "JWT token expiration (1 hour access, 7 days refresh)",
+        "Rate limiting on authentication endpoints",
+        "Account lockout after failed attempts"
+      ]
+    },
+    "validation": {
+      "framework": "Bean Validation (JSR-303)",
+      "custom_validators": [
+        "Arabic text validation (character set, length)",
+        "University email domain validation", 
+        "Student ID format validation",
+        "File type and size validation",
+        "Project title uniqueness validation"
+      ],
+      "error_handling": [
+        "Global exception handler with @ControllerAdvice",
+        "Internationalized error messages (Arabic/English)",
+        "Structured error response format",
+        "Field-level validation error details"
+      ]
+    },
+    "database": {
+      "design": "PostgreSQL 16.x with advanced features",
+      "security": [
+        "Row-level security (RLS) for multi-tenancy",
+        "University-scoped data access policies",
+        "Prepared statements for SQL injection prevention",
+        "Database user with minimal required permissions"
+      ],
+      "performance": [
+        "Strategic indexing for query optimization",
+        "Connection pooling with HikariCP",
+        "Query result caching with Redis",
+        "Database query monitoring and optimization"
+      ],
+      "migrations": [
+        "Flyway for version-controlled schema changes",
+        "Forward-compatible migration scripts",
+        "Rollback procedures for schema changes",
+        "Environment-specific migration configurations"
+      ]
+    },
+    "api_design": {
+      "style": "RESTful with OpenAPI 3.0 documentation",
+      "conventions": [
+        "Resource-based URLs (/api/v1/projects/{id})",
+        "HTTP methods for operations (GET, POST, PUT, DELETE)",
+        "Consistent response format with success/error structure",
+        "Pagination for list endpoints with page/size parameters"
+      ],
+      "internationalization": [
+        "Accept-Language header support",
+        "Localized response messages",
+        "Arabic and English content handling",
+        "RTL-aware data formatting"
+      ],
+      "error_handling": [
+        "Standard HTTP status codes",
+        "Custom error codes for business logic",
+        "Detailed error messages with field-level information",
+        "Correlation IDs for request tracking"
+      ]
+    },
+    "file_management": {
+      "storage": "Azure Blob Storage / DigitalOcean Spaces",
+      "security": [
+        "Virus scanning for all uploaded files",
+        "File type validation and restrictions",
+        "Access control with signed URLs",
+        "File encryption at rest and in transit"
+      ],
+      "features": [
+        "File versioning and history tracking",
+        "Bulk file operations (upload/download)",
+        "File sharing with expiration",
+        "File preview generation"
+      ],
+      "limits": [
+        "100MB maximum file size",
+        "1GB storage per project",
+        "Supported file types: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, TXT, images"
+      ]
+    },
+    "caching": {
+      "technology": "Redis 7.x",
+      "strategies": [
+        "Session data caching",
+        "Frequently accessed user data",
+        "Project and task metadata",
+        "Database query result caching",
+        "File metadata caching"
+      ],
+      "configuration": [
+        "TTL-based expiration policies",
+        "Cache invalidation on data updates",
+        "Memory usage monitoring and alerts",
+        "Fallback to database on cache miss"
+      ]
+    }
+  },
+  "tasks": {
+    "current_sprint": "Sprint 1",
+    "total_story_points": 180,
+    "sprint_capacity": {
+      "sprint_1": 120,
+      "sprint_1_5": 60
+    },
+    "completed": [
+      {
+        "id": "contradiction-fixes",
+        "title": "Fix documentation contradictions",
+        "story_points": 5,
+        "completed_date": "2024-12-01",
+        "developer": "both",
+        "deliverables": [
+          "Package name standardization",
+          "Sprint timeline alignment", 
+          "File size limit consistency",
+          "Email configuration standardization"
+        ]
+      },
+      {
+        "id": "postman-requirements",
+        "title": "Define Postman testing requirements",
+        "story_points": 3,
+        "completed_date": "2024-12-01",
+        "developer": "both",
+        "deliverables": [
+          "Postman folder structure requirements",
+          "Collection templates with Arabic support",
+          "Environment file specifications",
+          "Testing automation guidelines"
+        ]
+      }
+    ],
+    "in_progress": [
+      {
+        "id": "memory-implementation",
+        "title": "Implement memory system for project context",
+        "story_points": 8,
+        "assigned": "system",
+        "start_date": "2024-12-01",
+        "expected_completion": "2024-12-03",
+        "progress": [
+          "✅ Memory architecture designed",
+          "✅ Core memory.json structure created", 
+          "🚧 Context files creation in progress",
+          "⏳ CLAUDE.md integration pending"
+        ]
+      }
+    ],
+    "pending": [
+      {
+        "id": "authentication-system",
+        "title": "Implement JWT authentication system",
+        "story_points": 20,
+        "assigned": "developer_1",
+        "priority": "high",
+        "dependencies": ["memory-implementation"],
+        "epic": "User Authentication & Security"
+      },
+      {
+        "id": "database-setup",
+        "title": "Setup PostgreSQL database with migrations",
+        "story_points": 8,
+        "assigned": "developer_2", 
+        "priority": "high",
+        "dependencies": ["memory-implementation"],
+        "epic": "User & System Foundation"
+      }
+    ],
+    "epics": [
+      {
+        "id": "authentication-security",
+        "title": "User Authentication & Security",
+        "story_points": 20,
+        "assigned": "developer_1",
+        "status": "pending"
+      },
+      {
+        "id": "project-management-core",
+        "title": "Project Management Core",
+        "story_points": 30,
+        "assigned": "developer_1",
+        "status": "pending"
+      },
+      {
+        "id": "user-system-foundation",
+        "title": "User & System Foundation",
+        "story_points": 30,
+        "assigned": "developer_2",
+        "status": "pending"
+      },
+      {
+        "id": "task-management-system",
+        "title": "Task Management System",
+        "story_points": 30,
+        "assigned": "developer_2",
+        "status": "pending"
+      },
+      {
+        "id": "real-time-communication",
+        "title": "Real-time Communication",
+        "story_points": 30,
+        "assigned": "developer_1",
+        "status": "pending"
+      },
+      {
+        "id": "system-integration-admin",
+        "title": "System Integration & Administration", 
+        "story_points": 30,
+        "assigned": "developer_2",
+        "status": "pending"
+      }
+    ]
+  },
+  "sessions": {
+    "current_session": {
+      "id": "session-2024-12-01-001",
+      "start_time": "2024-12-01T09:00:00Z",
+      "context": "Memory system implementation and Postman testing requirements",
+      "objectives": [
+        "Implement comprehensive memory system",
+        "Integrate memory with existing project structure",
+        "Define Postman testing requirements for all endpoints"
+      ],
+      "progress": [
+        "✅ Analyzed memory system best practices",
+        "✅ Created memory implementation plan",
+        "✅ Implemented core memory.json structure",
+        "✅ Added Postman testing requirements to all documentation",
+        "🚧 Creating context files for knowledge management"
+      ],
+      "decisions_made": [
+        "DEC-004: Mandatory Postman collections for all 87 endpoints"
+      ],
+      "next_actions": [
+        "Create knowledge.md with domain expertise",
+        "Create patterns.md with coding patterns",
+        "Update CLAUDE.md with memory imports",
+        "Test memory system integration"
+      ]
+    },
+    "recent_sessions": [
+      {
+        "id": "session-2024-11-30-001",
+        "date": "2024-11-30",
+        "context": "Documentation contradiction analysis and fixes",
+        "outcomes": [
+          "Fixed package naming inconsistencies",
+          "Standardized sprint timeline definitions",
+          "Aligned file size limits across documents",
+          "Updated email configuration specifications"
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "backup_info": {
+      "last_backup": null,
+      "backup_frequency": "daily",
+      "backup_retention": "30 days",
+      "backup_location": ".claude/backups/"
+    },
+    "maintenance": {
+      "last_cleanup": null,
+      "cleanup_frequency": "weekly",
+      "memory_size_limit": "10MB",
+      "auto_summarization": true
+    },
+    "version_control": {
+      "tracked_files": [
+        "memory.json",
+        "context/*.md",
+        "config.json"
+      ],
+      "last_commit": null,
+      "auto_commit": false
+    }
+  }
+}

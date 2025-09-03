@@ -1,0 +1,28 @@
+﻿{
+    "backup_size":  0,
+    "verification":  {
+                         "integrity_check":  "passed"
+                     },
+    "backup_status":  "completed",
+    "backup_info":  {
+                        "date":  "2025-09-03",
+                        "time":  "20-32-40",
+                        "timestamp":  "2025-09-03T17:32:40Z",
+                        "backup_type":  "daily_automated",
+                        "retention_days":  30
+                    },
+    "file_count":  0,
+    "files_backed_up":  {
+                            "memory_files":  [
+                                                 "memory.json",
+                                                 "config.json",
+                                                 "README.md"
+                                             ],
+                            "directories":  [
+                                                "context/",
+                                                "commands/",
+                                                "agents/",
+                                                "workflows/"
+                                            ]
+                        }
+}
