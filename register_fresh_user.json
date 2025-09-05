@@ -1,0 +1,16 @@
+{
+  "email": "freshtest@cu.edu.eg",
+  "password": "TestPassword123!",
+  "confirmPassword": "TestPassword123!",
+  "firstName": "Fresh Test",
+  "lastName": "User",
+  "firstNameEn": "Fresh",
+  "lastNameEn": "Test",
+  "firstNameAr": "Fresh",
+  "lastNameAr": "Test",
+  "role": "STUDENT",
+  "studentId": "20230001",
+  "phoneNumber": "+201234567890",
+  "departmentId": 1,
+  "preferredLanguage": "en"
+}

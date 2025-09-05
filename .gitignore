@@ -52,3 +52,12 @@ node_modules/
 
 # Postman generated files
 postman/*/newman/
+
+.claude/
+
+postman/
+
+CLAUDE.md
+
+.dockerignore
+
