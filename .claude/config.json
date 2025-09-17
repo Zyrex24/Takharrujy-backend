@@ -58,7 +58,7 @@
     },
     "mcp": {
       "enabled": true,
-      "tools": ["gitmvp", "github", "lighthouse"]
+      "tools": ["gitmvp", "github", "lighthouse","context7","vercel"]
     }
   }
 }

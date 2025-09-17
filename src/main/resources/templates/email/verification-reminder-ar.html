@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تذكير تأكيد البريد الإلكتروني - منصة تخرجي</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            direction: rtl;
+        }
+        .header {
+            background-color: #ffc107;
+            color: #212529;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .content {
+            background-color: #f8f9fa;
+            padding: 30px;
+            border-radius: 0 0 8px 8px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #666;
+        }
+        .reminder {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚠️ تذكير تأكيد البريد الإلكتروني</h1>
+    </div>
+    <div class="content">
+        <h2>مرحباً <span th:text="${userNameAr}">المستخدم</span>،</h2>
+        
+        <div class="reminder">
+            <p><strong>عنوان بريدك الإلكتروني لم يتم تأكيده بعد!</strong></p>
+            <p>لقد قمت بالتسجيل في منصة تخرجي، ولكن لم تقم بتأكيد عنوان بريدك الإلكتروني بعد. يرجى تأكيده للوصول إلى جميع ميزات المنصة.</p>
+        </div>
+        
+        <p>انقر على الزر أدناه لتأكيد عنوان بريدك الإلكتروني:</p>
+        
+        <div style="text-align: center;">
+            <a th:href="${verificationUrl}" class="button">تأكيد البريد الإلكتروني</a>
+        </div>
+        
+        <p>إذا لم يعمل الزر، يمكنك نسخ ولصق هذا الرابط في متصفحك:</p>
+        <p><a th:href="${verificationUrl}" th:text="${verificationUrl}">رابط التأكيد</a></p>
+        
+        <p>سينتهي صلاحية رابط التأكيد خلال 24 ساعة لأسباب أمنية.</p>
+        
+        <p>إذا لم تقم بإنشاء حساب معنا، يرجى تجاهل هذا البريد الإلكتروني.</p>
+        
+        <p>مع أطيب التحيات،<br>فريق منصة تخرجي</p>
+    </div>
+    <div class="footer">
+        <p>© 2024 منصة تخرجي. جميع الحقوق محفوظة.</p>
+        <p>إذا كنت بحاجة إلى مساعدة، تواصل معنا على <span th:text="${supportEmail}">support@takharrujy.com</span></p>
+    </div>
+</body>
+</html>

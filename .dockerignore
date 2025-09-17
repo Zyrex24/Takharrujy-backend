@@ -1,0 +1,69 @@
+# Docker ignore file for Takharrujy Backend
+
+# Build artifacts
+target/
+*.jar
+*.war
+*.ear
+*.class
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.settings/
+.project
+.classpath
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Logs
+logs/
+*.log
+
+# Docker files (avoid recursion)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Node.js (if any)
+node_modules/
+npm-debug.log
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+
+# Local uploads (development)
+uploads/
+dev-uploads/
+
+# Test results
+test-results/
+coverage/
+
+# Documentation
+docs/
+*.md
+README*
+
+# Kubernetes
+k8s/
+kubernetes/

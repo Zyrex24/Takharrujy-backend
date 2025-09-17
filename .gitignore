@@ -52,3 +52,42 @@ node_modules/
 
 # Postman generated files
 postman/*/newman/
+postman/**/results.json
+postman/**/test-results.json
+
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Log files
+logs/
+*.log.*
+*.gz
+
+# Test results and generated files
+test-results.json
+newman-results.json
+
+# Documentation generated files (keep source, ignore generated)
+*.pdf
+*.png
+
+# Build and runtime files
+target/
+!target/.gitkeep
+
+misc/
+
+.docketignore
+
+.env
+
+postman/
+
+.claude/
+
+.idea/ 
+
+Claude.md

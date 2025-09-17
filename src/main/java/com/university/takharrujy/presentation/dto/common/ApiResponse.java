@@ -78,7 +78,7 @@ public record ApiResponse<T>(
      * Create error response with error code and message
      */
     public static <T> ApiResponse<T> error(String errorCode, String message) {
-        ErrorDetails error = new ErrorDetails(errorCode, message, null, null);
+        ErrorDetails error = ErrorDetails.of(errorCode, message);
         return new ApiResponse<>(false, message, null, null, error, Instant.now());
     }
 }

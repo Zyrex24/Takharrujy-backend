@@ -1,0 +1,201 @@
+spring:
+  application:
+    name: takharrujy
+  
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/takharrujy_dev}
+    username: ${DATABASE_USERNAME:takharrujy}
+    password: ${DATABASE_PASSWORD:takharrujy}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        default_schema: public
+        type:
+          preferred_uuid_jdbc_type: CHAR
+    open-in-view: false
+  
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+  
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+  
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000
+      cache-null-values: false
+  
+  mail:
+    host: ${MAIL_HOST:smtp-relay.brevo.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 3000
+          writetimeout: 5000
+  
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB
+      file-size-threshold: 2KB
+  
+  jackson:
+    time-zone: UTC
+    date-format: yyyy-MM-dd'T'HH:mm:ss.SSS'Z'
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+  
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+      force-request: true
+      force-response: true
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+  
+  error:
+    include-stacktrace: never
+    include-message: always
+
+logging:
+  level:
+    com.university.takharrujy: ${LOG_LEVEL:INFO}
+    org.springframework.security: INFO
+    org.springframework.web: INFO
+    org.hibernate: WARN
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: ${LOG_FILE:logs/takharrujy.log}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    redis:
+      enabled: true
+    db:
+      enabled: true
+
+# Application specific configuration
+takharrujy:
+  jwt:
+    secret: ${JWT_SECRET:takharrujy-super-secret-key-that-should-be-changed-in-production}
+    expiration: ${JWT_EXPIRATION:3600000} # 1 hour in milliseconds
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days in milliseconds
+    remember-refresh-expiration: ${JWT_REMEMBER_REFRESH_EXPIRATION:2592000000} # 30 days for remember me
+  
+  file-storage:
+    type: ${FILE_STORAGE_TYPE:azure} # azure, spaces, local
+    azure:
+      connection-string: ${AZURE_STORAGE_CONNECTION_STRING:}
+      container-name: ${AZURE_CONTAINER_NAME:takharrujy-files}
+    spaces:
+      endpoint: ${SPACES_ENDPOINT:}
+      access-key: ${SPACES_ACCESS_KEY:}
+      secret-key: ${SPACES_SECRET_KEY:}
+      bucket-name: ${SPACES_BUCKET_NAME:takharrujy-files}
+    local:
+      upload-dir: ${LOCAL_UPLOAD_DIR:./uploads}
+  
+  email:
+    from: ${EMAIL_FROM:noreply@takharrujy.tech}
+    from-name: ${EMAIL_FROM_NAME:Takharrujy Platform}
+    templates:
+      base-url: ${EMAIL_BASE_URL:https://app.takharrujy.tech}
+  
+  security:
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
+      allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+      allowed-headers: "*"
+      allow-credentials: true
+    
+    rate-limiting:
+      enabled: ${RATE_LIMITING_ENABLED:true}
+      requests-per-minute: ${RATE_LIMIT_RPM:60}
+  
+  virus-scan:
+    enabled: ${VIRUS_SCAN_ENABLED:true}
+    provider: ${VIRUS_SCAN_PROVIDER:clamav} # clamav, virustotal
+    
+  features:
+    registration-enabled: ${REGISTRATION_ENABLED:true}
+    file-upload-enabled: ${FILE_UPLOAD_ENABLED:true}
+    notifications-enabled: ${NOTIFICATIONS_ENABLED:true}
+  
+  auth:
+    require-email-verification: ${REQUIRE_EMAIL_VERIFICATION:false}
+
+# Internationalization
+spring.messages:
+  basename: messages
+  encoding: UTF-8
+  fallback-to-system-locale: false
+  use-code-as-default-message: false

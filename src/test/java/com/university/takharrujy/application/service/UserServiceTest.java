@@ -11,6 +11,7 @@ import com.university.takharrujy.domain.repository.UserRepository;
 import com.university.takharrujy.infrastructure.exception.ResourceNotFoundException;
 import com.university.takharrujy.infrastructure.exception.ValidationException;
 import com.university.takharrujy.presentation.dto.user.*;
+import com.university.takharrujy.presentation.mapper.UserMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

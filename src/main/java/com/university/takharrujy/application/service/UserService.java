@@ -8,6 +8,7 @@ import com.university.takharrujy.domain.repository.UserActivityRepository;
 import com.university.takharrujy.domain.repository.UserPreferencesRepository;
 import com.university.takharrujy.domain.repository.UserRepository;
 import com.university.takharrujy.presentation.dto.user.*;
+import com.university.takharrujy.presentation.mapper.UserMapper;
 import com.university.takharrujy.infrastructure.exception.ResourceNotFoundException;
 import com.university.takharrujy.infrastructure.exception.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;

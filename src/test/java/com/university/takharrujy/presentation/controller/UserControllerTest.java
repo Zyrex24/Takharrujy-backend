@@ -10,7 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -39,7 +39,7 @@ class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
     
-    @MockBean
+    @MockitoBean
     private UserService userService;
     
     @Autowired
@@ -110,7 +110,7 @@ class UserControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpected(jsonPath("$.message").value("Profile updated successfully"))
+                .andExpect(jsonPath("$.message").value("Profile updated successfully"))
                 .andExpect(jsonPath("$.messageAr").value("تم تحديث الملف الشخصي بنجاح"))
                 .andExpect(jsonPath("$.data.id").value(1));
     }
@@ -153,7 +153,7 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Avatar uploaded successfully"))
-                .andExpected(jsonPath("$.messageAr").value("تم رفع الصورة الشخصية بنجاح"));
+                .andExpect(jsonPath("$.messageAr").value("تم رفع الصورة الشخصية بنجاح"));
     }
     
     @Test
@@ -165,7 +165,7 @@ class UserControllerTest {
                 .with(csrf())
                 .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andDo(print())
-                .andExpected(status().isBadRequest());
+                .andExpect(status().isBadRequest());
     }
     
     @Test
@@ -186,9 +186,9 @@ class UserControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpected(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Password changed successfully"))
-                .andExpected(jsonPath("$.messageAr").value("تم تغيير كلمة المرور بنجاح"));
+                .andExpect(jsonPath("$.messageAr").value("تم تغيير كلمة المرور بنجاح"));
     }
     
     @Test
@@ -208,7 +208,7 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
-                .andExpected(status().isBadRequest());
+                .andExpect(status().isBadRequest());
     }
     
     @Test
@@ -223,12 +223,12 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpected(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Preferences retrieved successfully"))
-                .andExpected(jsonPath("$.messageAr").value("تم استرداد التفضيلات بنجاح"))
-                .andExpected(jsonPath("$.data.userId").value(1))
-                .andExpected(jsonPath("$.data.emailNotifications").value(true))
-                .andExpected(jsonPath("$.data.theme").value("auto"))
+                .andExpect(jsonPath("$.messageAr").value("تم استرداد التفضيلات بنجاح"))
+                .andExpect(jsonPath("$.data.userId").value(1))
+                .andExpect(jsonPath("$.data.emailNotifications").value(true))
+                .andExpect(jsonPath("$.data.theme").value("auto"))
                 .andExpect(jsonPath("$.data.language").value("ar"));
     }
     
@@ -252,7 +252,7 @@ class UserControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpected(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Preferences updated successfully"))
                 .andExpect(jsonPath("$.messageAr").value("تم تحديث التفضيلات بنجاح"));
     }
@@ -273,7 +273,7 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
-                .andExpected(status().isBadRequest());
+                .andExpect(status().isBadRequest());
     }
     
     @Test
@@ -295,11 +295,11 @@ class UserControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpected(jsonPath("$.message").value("Activity history retrieved successfully"))
+                .andExpect(jsonPath("$.message").value("Activity history retrieved successfully"))
                 .andExpect(jsonPath("$.messageAr").value("تم استرداد سجل الأنشطة بنجاح"))
-                .andExpected(jsonPath("$.data.content").isArray())
-                .andExpected(jsonPath("$.data.content[0].id").value(1))
-                .andExpected(jsonPath("$.data.content[0].activityType").value("PROFILE_UPDATE"));
+                .andExpect(jsonPath("$.data.content").isArray())
+                .andExpect(jsonPath("$.data.content[0].id").value(1))
+                .andExpect(jsonPath("$.data.content[0].activityType").value("PROFILE_UPDATE"));
     }
     
     @Test
@@ -321,8 +321,8 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpected(jsonPath("$.success").value(true))
-                .andExpected(jsonPath("$.data.content").isArray());
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.content").isArray());
     }
     
     @Test

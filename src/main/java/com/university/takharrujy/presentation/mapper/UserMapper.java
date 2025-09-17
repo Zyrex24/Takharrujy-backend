@@ -1,4 +1,4 @@
-package com.university.takharrujy.application.service;
+package com.university.takharrujy.presentation.mapper;
 
 import com.university.takharrujy.domain.entity.User;
 import com.university.takharrujy.domain.entity.UserActivity;

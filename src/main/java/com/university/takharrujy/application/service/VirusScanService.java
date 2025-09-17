@@ -25,7 +25,7 @@ public class VirusScanService {
         // Example virus signatures - in production use real antivirus engine
         new byte[]{0x4D, 0x5A}, // PE executable header
         new byte[]{0x7F, 0x45, 0x4C, 0x46}, // ELF header
-        new byte[]{0xCA, 0xFE, 0xBA, 0xBE} // Java class file
+        new byte[]{(byte) 0xCA, (byte) 0xFE, (byte) 0xBA, (byte) 0xBE} // Java class file
     );
     
     // Dangerous file extensions
