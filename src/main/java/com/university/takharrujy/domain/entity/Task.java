@@ -1,9 +1,12 @@
 package com.university.takharrujy.domain.entity;
 
 import com.university.takharrujy.domain.enums.TaskStatus;
+import com.university.takharrujy.infrastructure.config.PostgreSQLEnumType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -36,6 +39,7 @@ public class Task extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private TaskStatus status = TaskStatus.TODO;
 
     @Column(name = "start_date")
