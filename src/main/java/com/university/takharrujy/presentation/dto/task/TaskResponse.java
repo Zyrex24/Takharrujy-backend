@@ -32,13 +32,13 @@ public record TaskResponse(
         @Schema(description = "Task priority (text)", example = "High")
         String priorityText,
 
-        @Schema(description = "Start date", example = "2025-09-10T09:00:00")
+        @Schema(description = "Start date", example = "2025-09-10")
         LocalDate startDate,
 
-        @Schema(description = "Due date", example = "2025-09-20T17:00:00")
+        @Schema(description = "Due date", example = "2025-09-30")
         LocalDate dueDate,
 
-        @Schema(description = "Completion date", example = "2025-09-19T15:30:00")
+        @Schema(description = "Completion date", example = "2025-09-20")
         LocalDate completionDate,
 
         @Schema(description = "Progress percentage", example = "40")

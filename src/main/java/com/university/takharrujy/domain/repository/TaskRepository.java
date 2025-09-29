@@ -25,6 +25,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             TaskStatus status
     );
 
+    boolean existsByDependencies(Task dependency);
+
     @Query("SELECT COUNT(t) FROM Task t WHERE t.project.id = :projectId")
     long countTotalTasks(Long projectId);
 
