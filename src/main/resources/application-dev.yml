@@ -1,0 +1,58 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/takharrujy_dev
+    username: takharrujy
+    password: takharrujy
+  
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ""
+      database: 0
+  
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB
+      file-size-threshold: 2MB
+
+logging:
+  level:
+    com.university.takharrujy: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.security: DEBUG
+
+takharrujy:
+  jwt:
+    secret: takharrujy-dev-secret-key-not-for-production
+    expiration: 86400000 # 24 hours for development
+  
+  file-storage:
+    type: local
+    local:
+      upload-dir: ./dev-uploads
+    max-file-size: 104857600 # 100MB in bytes
+    allowed-types: application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip,text/plain,image/jpeg,image/png,image/webp,image/gif
+  
+  security:
+    cors:
+      allowed-origins: "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000"
+    rate-limiting:
+      enabled: false # Disable in development
+  
+  virus-scan:
+    enabled: false # Disable in development
+  
+  email:
+    from: dev@takharrujy.local
+    templates:
+      base-url: http://localhost:3000

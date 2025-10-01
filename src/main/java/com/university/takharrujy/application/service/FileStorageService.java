@@ -3,6 +3,8 @@ package com.university.takharrujy.application.service;
 import com.university.takharrujy.infrastructure.exception.FileStorageException;
 import com.university.takharrujy.infrastructure.exception.ValidationException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -12,6 +14,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -180,5 +183,78 @@ public class FileStorageService {
             return ".jpg"; // default extension
         }
         return filename.substring(filename.lastIndexOf('.'));
+    }
+    
+    /**
+     * Store project file
+     * Uploads a file for a specific project with organized directory structure
+     */
+    public String storeProjectFile(MultipartFile file, Long projectId) {
+        try {
+            String original = file.getOriginalFilename();
+            String ext = getFileExtension(original);
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+            String name = String.format("p_%d_%s_%s%s",
+                projectId, timestamp, UUID.randomUUID().toString().substring(0, 8), ext);
+
+            // Create organized directory structure: uploads/projects/{projectId}/{year}/{month}/{day}
+            Path base = Paths.get(uploadDir, "projects", String.valueOf(projectId),
+                String.valueOf(LocalDateTime.now().getYear()),
+                String.format("%02d", LocalDateTime.now().getMonthValue()),
+                String.format("%02d", LocalDateTime.now().getDayOfMonth()));
+            Files.createDirectories(base);
+
+            Path target = base.resolve(name);
+            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+
+            // Return normalized relative path
+            Path rel = Paths.get(uploadDir).relativize(target).normalize();
+            return "/" + uploadDir + "/" + rel.toString().replace("\\", "/");
+        } catch (IOException e) {
+            throw new FileStorageException("Failed to store project file: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Load file as resource for download
+     */
+    public Resource loadAsResource(String storagePath) {
+        try {
+            String clean = storagePath.startsWith("/") ? storagePath.substring(1) : storagePath;
+            Path path = Paths.get(clean).normalize();
+            
+            if (!Files.exists(path)) {
+                // Try resolve relative to uploadDir root
+                Path root = Paths.get(uploadDir).toAbsolutePath().normalize();
+                Path candidate = storagePath.startsWith("/" + uploadDir + "/")
+                    ? Paths.get(storagePath.substring(1))
+                    : root.resolve(clean);
+                path = candidate.normalize();
+            }
+            
+            Resource resource = new UrlResource(path.toUri());
+            if (resource.exists() && resource.isReadable()) {
+                return resource;
+            }
+            throw new FileStorageException("File not found or unreadable: " + storagePath);
+        } catch (MalformedURLException ex) {
+            throw new FileStorageException("Invalid file URL: " + storagePath, ex);
+        }
+    }
+    
+    /**
+     * Delete file from storage
+     */
+    public void deleteFile(String storagePath) {
+        try {
+            String clean = storagePath.startsWith("/") ? storagePath.substring(1) : storagePath;
+            Path path = Paths.get(clean).normalize();
+            if (Files.exists(path)) {
+                Files.delete(path);
+            }
+        } catch (IOException e) {
+            // Swallow delete failures to avoid cascading errors
+            System.err.println("Failed to delete file: " + e.getMessage());
+        }
     }
 }

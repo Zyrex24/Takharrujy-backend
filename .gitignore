@@ -29,6 +29,11 @@ build/
 application-*.properties
 application-*.yml
 
+# File uploads
+dev-uploads/
+uploads/
+avatars/
+
 # Database
 *.db
 *.sqlite
