@@ -4,6 +4,7 @@ import com.university.takharrujy.domain.entity.Comment;
 import com.university.takharrujy.domain.entity.Project;
 import com.university.takharrujy.domain.entity.Task;
 import com.university.takharrujy.domain.entity.User;
+import com.university.takharrujy.domain.enums.NotificationType;
 import com.university.takharrujy.domain.enums.UserRole;
 import com.university.takharrujy.domain.repository.CommentRepository;
 import com.university.takharrujy.domain.repository.TaskRepository;
@@ -36,12 +37,14 @@ public class CommentService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final CommentMapper commentMapper;
+    private final NotificationService notificationService;
 
-    public CommentService(CommentRepository commentRepository, TaskRepository taskRepository, UserRepository userRepository, CommentMapper commentMapper) {
+    public CommentService(CommentRepository commentRepository, TaskRepository taskRepository, UserRepository userRepository, CommentMapper commentMapper, NotificationService notificationService) {
         this.commentRepository = commentRepository;
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.commentMapper = commentMapper;
+        this.notificationService = notificationService;
     }
 
     // ------------------ Public APIs ------------------
@@ -65,6 +68,28 @@ public class CommentService {
         Comment saved = commentRepository.save(comment);
 
         log.info("User {} created comment {} on task {}", currentUserId, saved.getId(), taskId);
+
+        // --- Notification to assigned user ---
+        if (task.getAssignedTo() != null && !task.getAssignedTo().getId().equals(currentUserId)) {
+            notificationService.createNotification(
+                    task.getAssignedTo(),
+                    "New Comment",
+                    "A new comment has been added to your task '" + task.getTitle() + "'",
+                    NotificationType.COMMENT
+            );
+        }
+
+        // --- Notification to supervisor ---
+        if (task.getProject().getSupervisor() != null &&
+                !task.getProject().getSupervisor().getId().equals(currentUserId)) {
+            notificationService.createNotification(
+                    task.getProject().getSupervisor(),
+                    "New Comment",
+                    "A new comment has been added to task '" + task.getTitle() + "'",
+                    NotificationType.COMMENT
+            );
+        }
+
         return commentMapper.toCommentResponse(saved);
     }
 
@@ -85,6 +110,17 @@ public class CommentService {
         Comment updated = commentRepository.save(comment);
 
         log.info("User {} updated comment {}", currentUserId, commentId);
+
+        // --- Notification to original author if someone else edited ---
+        if (!comment.getAuthor().getId().equals(currentUserId)) {
+            notificationService.createNotification(
+                    comment.getAuthor(),
+                    "Comment Updated",
+                    "Your comment on task '" + comment.getTask().getTitle() + "' has been updated by another user",
+                    NotificationType.COMMENT
+            );
+        }
+
         return commentMapper.toCommentResponse(updated);
     }
 
@@ -100,6 +136,16 @@ public class CommentService {
         commentRepository.delete(comment);
 
         log.info("User {} deleted comment {}", currentUserId, commentId);
+
+        // --- Notification to original author if someone else deleted ---
+        if (!comment.getAuthor().getId().equals(currentUserId)) {
+            notificationService.createNotification(
+                    comment.getAuthor(),
+                    "Comment Deleted",
+                    "Your comment on task '" + comment.getTask().getTitle() + "' has been deleted by another user",
+                    NotificationType.COMMENT
+            );
+        }
     }
 
     @Transactional(readOnly = true)

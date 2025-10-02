@@ -1,11 +1,13 @@
 package com.university.takharrujy.application.service;
 
 import com.university.takharrujy.domain.entity.*;
+import com.university.takharrujy.domain.enums.NotificationType;
 import com.university.takharrujy.domain.enums.ProjectStatus;
 import com.university.takharrujy.domain.enums.UserRole;
 import com.university.takharrujy.infrastructure.exception.BusinessException;
 import com.university.takharrujy.infrastructure.exception.ResourceNotFoundException;
 import com.university.takharrujy.domain.repository.*;
+import com.university.takharrujy.presentation.dto.admin.SupervisorAssignmentRequest;
 import com.university.takharrujy.presentation.dto.project.*;
 import com.university.takharrujy.presentation.mapper.ProjectMapper;
 import org.slf4j.Logger;
@@ -33,15 +35,17 @@ public class ProjectService {
     private final ProjectMemberRepository projectMemberRepository;
     private final UserRepository userRepository;
     private final ProjectMapper projectMapper;
+    private final NotificationService notificationService;
 
     public ProjectService(ProjectRepository projectRepository,
-                         ProjectMemberRepository projectMemberRepository,
-                         UserRepository userRepository,
-                         ProjectMapper projectMapper) {
+                          ProjectMemberRepository projectMemberRepository,
+                          UserRepository userRepository,
+                          ProjectMapper projectMapper, NotificationService notificationService) {
         this.projectRepository = projectRepository;
         this.projectMemberRepository = projectMemberRepository;
         this.userRepository = userRepository;
         this.projectMapper = projectMapper;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -109,7 +113,67 @@ public class ProjectService {
         }
 
         logger.info("Successfully created project with ID: {} for user: {}", project.getId(), currentUserId);
+
+        // Notify team members
+        for (ProjectMember member : project.getMembers()) {
+            notificationService.createNotification(
+                    member.getUser(),
+                    "New Project Added",
+                    "The project '" + project.getTitle() + "' has been created and you are added as a team member.",
+                    NotificationType.PROJECT_UPDATE
+            );
+        }
+
         return projectMapper.toProjectResponse(project);
+    }
+
+    /**
+     * Get all projects (Only for admin)
+     */
+    @Transactional(readOnly = true)
+    public List<ProjectResponse> getAllProjects() {
+        List<Project> projects = projectRepository.findAll();
+        return projects.stream()
+                .map(projectMapper::toProjectResponse)
+                .toList();
+    }
+
+    /**
+     * Assign supervisor to a project (Only for admin)
+     */
+    @Transactional
+    public ProjectResponse assignSupervisor(Long projectId, SupervisorAssignmentRequest request) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+
+        User supervisor = userRepository.findById(request.supervisorId())
+                .orElseThrow(() -> new ResourceNotFoundException("Supervisor not found"));
+
+        // Check that user has SUPERVISOR role
+        if (!supervisor.isSupervisor()) {
+            throw BusinessException.invalidInput("User is not a supervisor");
+        }
+
+        project.setSupervisor(supervisor);
+        Project saved = projectRepository.save(project);
+
+        // Notify supervisor
+        notificationService.createNotification(
+                supervisor,
+                "You Have Been Assigned",
+                "You have been assigned as the supervisor for the project '" + project.getTitle() + "'.",
+                NotificationType.PROJECT_UPDATE
+        );
+
+        // Notify team leader
+        notificationService.createNotification(
+                project.getTeamLeader(),
+                "Supervisor Assigned",
+                supervisor.getFullName() + " has been assigned as the supervisor for your project '" + project.getTitle() + "'.",
+                NotificationType.PROJECT_UPDATE
+        );
+
+        return projectMapper.toProjectResponse(saved);
     }
 
     /**
@@ -193,6 +257,28 @@ public class ProjectService {
         project = projectRepository.save(project);
 
         logger.info("Successfully submitted project: {}", projectId);
+
+        // Notify supervisor
+        if (project.getSupervisor() != null) {
+            notificationService.createNotification(
+                    project.getSupervisor(),
+                    "Project Submitted",
+                    project.getTeamLeader().getFullName() + " submitted the project '" + project.getTitle() + "' for your review.",
+                    NotificationType.PROJECT_UPDATE
+            );
+        }
+
+        // Notify team members
+        for (ProjectMember member : project.getMembers()) {
+            notificationService.createNotification(
+                    member.getUser(),
+                    "Project Submitted",
+                    "The project '" + project.getTitle() + "' has been submitted by the team leader.",
+                    NotificationType.PROJECT_UPDATE
+            );
+        }
+
+
         return projectMapper.toProjectResponse(project);
     }
 
@@ -233,6 +319,17 @@ public class ProjectService {
         project = projectRepository.save(project);
 
         logger.info("Successfully updated project: {}", projectId);
+
+        // Notify team members
+        for (ProjectMember member : project.getMembers()) {
+            notificationService.createNotification(
+                    member.getUser(),
+                    "Project Updated",
+                    "The project '" + project.getTitle() + "' has been updated.",
+                    NotificationType.PROJECT_UPDATE
+            );
+        }
+
         return projectMapper.toProjectResponse(project);
     }
 

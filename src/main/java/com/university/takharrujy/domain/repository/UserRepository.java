@@ -47,6 +47,11 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     boolean existsByStudentIdAndUniversityId(String studentId, Long universityId);
     
     /**
+     * Count users by role
+     */
+    long countByRole(UserRole role);
+
+    /**
      * Find users by role within a university
      */
     @Query("SELECT u FROM User u WHERE u.role = :role AND u.universityId = :universityId AND u.isActive = true")

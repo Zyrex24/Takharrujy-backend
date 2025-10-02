@@ -1,9 +1,11 @@
 package com.university.takharrujy.application.service;
 
 import com.university.takharrujy.domain.entity.Project;
+import com.university.takharrujy.domain.entity.ProjectMember;
 import com.university.takharrujy.domain.entity.Task;
 import com.university.takharrujy.domain.entity.User;
 import com.university.takharrujy.domain.enums.MemberRole;
+import com.university.takharrujy.domain.enums.NotificationType;
 import com.university.takharrujy.domain.enums.TaskStatus;
 import com.university.takharrujy.domain.enums.UserRole;
 import com.university.takharrujy.domain.repository.ProjectRepository;
@@ -34,17 +36,19 @@ public class TaskService {
     private final UserRepository userRepository;
     private final UniversityRepository universityRepository;
     private final TaskMapper taskMapper;
+    private final NotificationService notificationService;
 
     public TaskService(TaskRepository taskRepository,
                        ProjectRepository projectRepository,
                        UserRepository userRepository,
                        UniversityRepository universityRepository,
-                       TaskMapper taskMapper) {
+                       TaskMapper taskMapper, NotificationService notificationService) {
         this.taskRepository = taskRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.universityRepository = universityRepository;
         this.taskMapper = taskMapper;
+        this.notificationService = notificationService;
     }
 
     // --- CREATE ----------------------------------------------------------------
@@ -91,6 +95,17 @@ public class TaskService {
         }
 
         Task saved = taskRepository.save(task);
+
+        // --- Generate Notification ---
+        if (assignedUser != null) {
+            notificationService.createNotification(
+                    assignedUser,
+                    "New Task Assigned",
+                    "You have a new task: " + saved.getTitle(),
+                    NotificationType.TASK
+            );
+        }
+
         log.info("Task [{}] created by user [{}] in project [{}]", saved.getId(), currentUserId, project.getId());
         return taskMapper.toTaskResponse(saved);
     }
@@ -133,14 +148,26 @@ public class TaskService {
             }
         }
 
+        Task updated;
         try {
-            Task updated = taskRepository.save(task);
+            updated = taskRepository.save(task);
             log.info("Task [{}] updated by user [{}]", updated.getId(), currentUserId);
-            return taskMapper.toTaskResponse(updated);
         } catch (OptimisticLockingFailureException ex) {
             log.warn("Optimistic lock error while updating task [{}] by user [{}]", taskId, currentUserId, ex);
             throw BusinessException.operationNotAllowed("Task was modified concurrently. Please reload and retry.");
         }
+
+        // --- Generate Notification to Assignee ---
+        if (updated.getAssignedTo() != null) {
+            notificationService.createNotification(
+                    updated.getAssignedTo(),
+                    "Task Updated",
+                    "Task '" + updated.getTitle() + "' has been updated.",
+                    NotificationType.TASK
+            );
+        }
+
+        return taskMapper.toTaskResponse(updated);
     }
 
     // --- DELETE ----------------------------------------------------------------
@@ -158,6 +185,17 @@ public class TaskService {
         }
 
         taskRepository.delete(task);
+
+        // --- Generate Notification ---
+        if (task.getAssignedTo() != null) {
+            notificationService.createNotification(
+                    task.getAssignedTo(),
+                    "Task Deleted",
+                    "Task '" + task.getTitle() + "' has been deleted by " + currentUserEmail,
+                    NotificationType.TASK
+            );
+        }
+
         log.info("Task [{}] deleted by user [{}]", taskId, currentUserId);
     }
 
@@ -183,6 +221,18 @@ public class TaskService {
         }
 
         Task updated = taskRepository.save(task);
+
+        // --- Generate Notification to Project Leader ---
+        task.getProject().getMembers().stream()
+                .filter(pm -> pm.getRole() == MemberRole.LEADER)
+                .map(ProjectMember::getUser)
+                .forEach(leader -> notificationService.createNotification(
+                        leader,
+                        "Task Status Updated",
+                        "Task '" + updated.getTitle() + "' status changed to " + newStatus,
+                        NotificationType.TASK
+                ));
+
         log.info("Task [{}] status changed to [{}] by user [{}]", taskId, newStatus, currentUserId);
         return taskMapper.toTaskResponse(updated);
     }
@@ -203,6 +253,15 @@ public class TaskService {
 
         task.setAssignedTo(assignee);
         Task updatedTask = taskRepository.save(task);
+
+        // --- Generate Notification ---
+        notificationService.createNotification(
+                assignee,
+                "Task Assigned",
+                "You were assigned to task: " + updatedTask.getTitle(),
+                NotificationType.TASK
+        );
+
         log.info("Task [{}] assigned to user [{}] by leader [{}]", taskId, assignee.getId(), currentUserId);
         return taskMapper.toTaskResponse(updatedTask);
     }
@@ -219,6 +278,18 @@ public class TaskService {
         task.setProgressPercentage(100);
 
         Task updatedTask = taskRepository.save(task);
+
+        // --- Generate Notification to Project Leader ---
+        task.getProject().getMembers().stream()
+                .filter(pm -> pm.getRole() == MemberRole.LEADER)
+                .map(ProjectMember::getUser)
+                .forEach(leader -> notificationService.createNotification(
+                        leader,
+                        "Task Completed",
+                        "Task completed by " + task.getAssignedTo().getEmail() + ": " + updatedTask.getTitle(),
+                        NotificationType.TASK
+                ));
+
         log.info("Task [{}] completed by user [{}]", taskId, currentUserId);
         return taskMapper.toTaskResponse(updatedTask);
     }
@@ -254,6 +325,17 @@ public class TaskService {
         }
 
         taskRepository.save(task);
+
+        // --- Notification to the assignee of the dependency task ---
+        if (dependency.getAssignedTo() != null) {
+            notificationService.createNotification(
+                    dependency.getAssignedTo(),
+                    "Dependency Added",
+                    "Your task '" + dependency.getTitle() + "' has been added as a dependency to task '" + task.getTitle() + "'.",
+                    NotificationType.TASK
+            );
+        }
+
         log.info("Dependency [{}] added to task [{}] by user [{}]", dependency.getId(), taskId, currentUserId);
         return new TaskDependencyResponse(dependency.getId(), dependency.getTitle(), dependency.getStatus().name());
     }
@@ -270,6 +352,16 @@ public class TaskService {
 
         taskRepository.save(task);
         log.info("Dependency [{}] removed from task [{}] by user [{}]", depId, taskId, currentUserId);
+
+        // --- Notification to the assignee of the dependency task ---
+        if (dependency.getAssignedTo() != null) {
+            notificationService.createNotification(
+                    dependency.getAssignedTo(),
+                    "Dependency Removed",
+                    "Your task '" + dependency.getTitle() + "' has been removed as a dependency from task '" + task.getTitle() + "'.",
+                    NotificationType.TASK
+            );
+        }
     }
 
     // --- HELPERS ---------------------------------------------------------------

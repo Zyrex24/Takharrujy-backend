@@ -3,6 +3,7 @@ package com.university.takharrujy.application.service;
 import com.university.takharrujy.domain.entity.Project;
 import com.university.takharrujy.domain.entity.ProjectMember;
 import com.university.takharrujy.domain.entity.User;
+import com.university.takharrujy.domain.enums.NotificationType;
 import com.university.takharrujy.domain.enums.ProjectStatus;
 import com.university.takharrujy.domain.repository.ProjectRepository;
 import com.university.takharrujy.domain.repository.UserRepository;
@@ -29,16 +30,18 @@ public class SupervisorService {
     private final ProjectMapper projectMapper;
     private final OverviewMapper overviewMapper;
     private final UserMapper userMapper;
+    private final NotificationService notificationService;
 
     public SupervisorService(ProjectRepository projectRepository, UserRepository userRepository,
                              SupervisorDashboardMapper dashboardMapper, ProjectMapper projectMapper,
-                             OverviewMapper overviewMapper, UserMapper userMapper) {
+                             OverviewMapper overviewMapper, UserMapper userMapper, NotificationService notificationService) {
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.dashboardMapper = dashboardMapper;
         this.projectMapper = projectMapper;
         this.overviewMapper = overviewMapper;
         this.userMapper = userMapper;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -112,6 +115,17 @@ public class SupervisorService {
             project.setStatus(ProjectStatus.REJECTED);
         }
 
+        // Notification for project members
+        project.getMembers().forEach(pm -> {
+            notificationService.createNotification(
+                    pm.getUser(),
+                    "Project " + (project.getStatus() == ProjectStatus.APPROVED ? "Approved" : "Rejected"),
+                    "Project '" + project.getTitle() + "' has been " +
+                            (project.getStatus() == ProjectStatus.APPROVED ? "approved" : "rejected") + " by the supervisor.",
+                    NotificationType.PROJECT_UPDATE
+            );
+        });
+
         return projectMapper.toProjectResponse(projectRepository.save(project));
     }
 
@@ -125,6 +139,17 @@ public class SupervisorService {
         project.setSupervisorFeedbackAr(request.supervisorFeedbackAr());
 
         Project saved = projectRepository.save(project);
+
+        // Notification for project members
+        project.getMembers().forEach(pm -> {
+            notificationService.createNotification(
+                    pm.getUser(),
+                    "New Feedback on Project",
+                    "Supervisor provided feedback on project '" + project.getTitle() + "'.",
+                    NotificationType.PROJECT_UPDATE
+            );
+        });
+
         return new FeedbackResponse(saved.getId(), saved.getSupervisorFeedback(), saved.getSupervisorFeedbackAr());
     }
 

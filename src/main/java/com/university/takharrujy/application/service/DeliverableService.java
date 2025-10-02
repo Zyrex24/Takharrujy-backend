@@ -6,6 +6,7 @@ import com.university.takharrujy.domain.entity.ProjectMember;
 import com.university.takharrujy.domain.entity.User;
 import com.university.takharrujy.domain.enums.DeliverableStatus;
 import com.university.takharrujy.domain.enums.MemberRole;
+import com.university.takharrujy.domain.enums.NotificationType;
 import com.university.takharrujy.domain.repository.DeliverableRepository;
 import com.university.takharrujy.domain.repository.ProjectRepository;
 import com.university.takharrujy.domain.repository.UserRepository;
@@ -31,15 +32,17 @@ public class DeliverableService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final DeliverableMapper deliverableMapper;
+    private final NotificationService notificationService;
 
     public DeliverableService(DeliverableRepository deliverableRepository,
                               ProjectRepository projectRepository,
                               UserRepository userRepository,
-                              DeliverableMapper deliverableMapper) {
+                              DeliverableMapper deliverableMapper, NotificationService notificationService) {
         this.deliverableRepository = deliverableRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.deliverableMapper = deliverableMapper;
+        this.notificationService = notificationService;
     }
 
     // ---------------------- Helpers ----------------------
@@ -124,6 +127,18 @@ public class DeliverableService {
         deliverable.setStatus(DeliverableStatus.PENDING);
 
         deliverableRepository.save(deliverable);
+
+        // Notify all project members
+        project.getMembers().forEach(pm -> {
+            notificationService.createNotification(
+                    pm.getUser(),
+                    "New Deliverable",
+                    "A new deliverable '" + deliverable.getTitle() + "' has been created in project '" + project.getTitle() + "'.",
+                    NotificationType.DELIVERABLE
+            );
+        });
+
+
         return deliverableMapper.toResponse(deliverable);
     }
 
@@ -139,6 +154,16 @@ public class DeliverableService {
         deliverable.setUpdatedAt(Instant.now());
         deliverableRepository.save(deliverable);
 
+        // --- Notification: all project members ---
+        deliverable.getProject().getMembers().forEach(pm -> {
+            notificationService.createNotification(
+                    pm.getUser(),
+                    "Deliverable Updated",
+                    "Deliverable '" + deliverable.getTitle() + "' has been updated.",
+                    NotificationType.TASK
+            );
+        });
+
         return deliverableMapper.toResponse(deliverable);
     }
 
@@ -147,6 +172,16 @@ public class DeliverableService {
         Deliverable deliverable = requireDeliverable(deliverableId);
         ensureTeamLeader(deliverable.getProject(), currentUserId);
         deliverableRepository.delete(deliverable);
+
+        // --- Notification: all project members ---
+        deliverable.getProject().getMembers().forEach(pm -> {
+            notificationService.createNotification(
+                    pm.getUser(),
+                    "Deliverable Deleted",
+                    "Deliverable '" + deliverable.getTitle() + "' has been deleted.",
+                    NotificationType.TASK
+            );
+        });
     }
 
     @Transactional
@@ -164,6 +199,19 @@ public class DeliverableService {
         deliverable.setSubmissionFileUrl(request.fileUrl());
 
         deliverableRepository.save(deliverable);
+
+        // Notify supervisor
+        User supervisor = deliverable.getProject().getSupervisor();
+        if (supervisor != null) {
+            notificationService.createNotification(
+                    supervisor,
+                    "Deliverable Submitted",
+                    "Deliverable '" + deliverable.getTitle() + "' has been submitted by '" + requireUser(currentUserId).getEmail() + "'.",
+                    NotificationType.DELIVERABLE
+            );
+        }
+
+
         return deliverableMapper.toResponse(deliverable);
     }
 
@@ -178,6 +226,17 @@ public class DeliverableService {
         deliverable.setSupervisorFeedbackAr(request.supervisorFeedbackAr());
 
         deliverableRepository.save(deliverable);
+
+        // --- Notification: project members ---
+        deliverable.getProject().getMembers().forEach(pm -> {
+            notificationService.createNotification(
+                    pm.getUser(),
+                    "Deliverable Feedback",
+                    "Deliverable '" + deliverable.getTitle() + "' has received feedback from the supervisor.",
+                    NotificationType.TASK
+            );
+        });
+
         return deliverableMapper.toResponse(deliverable);
     }
 
@@ -194,6 +253,18 @@ public class DeliverableService {
 
         deliverable.setStatus(request.approved() ? DeliverableStatus.APPROVED : DeliverableStatus.REJECTED);
         deliverableRepository.save(deliverable);
+
+        // Notify creator
+        User creator = userRepository.findByEmail(deliverable.getCreatedBy()).orElse(null);
+        if (creator != null) {
+            notificationService.createNotification(
+                    creator,
+                    "Deliverable " + (deliverable.getStatus() == DeliverableStatus.APPROVED ? "Approved" : "Rejected"),
+                    "Your deliverable '" + deliverable.getTitle() + "' has been " + deliverable.getStatus().name().toLowerCase() + ".",
+                    NotificationType.DELIVERABLE
+            );
+        }
+
 
         return deliverableMapper.toResponse(deliverable);
     }
