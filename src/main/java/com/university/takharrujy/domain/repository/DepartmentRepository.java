@@ -21,6 +21,11 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
      */
     @Query("SELECT d FROM Department d WHERE d.universityId = :universityId AND d.isActive = true ORDER BY d.name")
     List<Department> findByUniversityIdAndIsActiveTrue(@Param("universityId") Long universityId);
+
+    /**
+     * Find department by departmentId and universityId
+     */
+    Optional<Department> findByIdAndUniversityId(Long id, Long universityId);
     
     /**
      * Find department by code and university

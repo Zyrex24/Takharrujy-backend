@@ -41,6 +41,11 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     @Query("SELECT p FROM Project p WHERE p.supervisor.id = :supervisorId")
     List<Project> findBySupervisorId(@Param("supervisorId") Long supervisorId);
 
+    Optional<Project> findByIdAndSupervisorId(Long projectId, Long supervisorId);
+
+    long countBySupervisorId(Long supervisorId);
+    long countBySupervisorIdAndStatus(Long supervisorId, ProjectStatus status);
+
     /**
      * Find projects by status
      */
