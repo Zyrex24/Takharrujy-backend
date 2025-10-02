@@ -345,4 +345,228 @@ INSERT INTO users (university_id, department_id, email, password_hash, first_nam
 (2, 4, 'admin@ksu.edu.sa', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LeHR.KHCpRx2g.MX2', 'Admin', 'User', 'مدير', 'النظام', 'ADMIN', true, true, 'ar'),
 (3, 6, 'admin@aub.edu.lb', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LeHR.KHCpRx2g.MX2', 'Admin', 'User', 'مدير', 'النظام', 'ADMIN', true, true, 'ar');
 
+
+-- ============================================
+-- Comments Table
+-- ============================================
+
+CREATE TABLE comments (
+    id BIGSERIAL PRIMARY KEY,
+    university_id BIGINT NOT NULL REFERENCES universities(id) ON DELETE CASCADE,
+    task_id BIGINT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    author_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+
+    -- Audit fields (BaseEntity style)
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
+    version BIGINT DEFAULT 0
+);
+
+-- Indexes
+CREATE INDEX idx_comments_university_id ON comments(university_id);
+CREATE INDEX idx_comments_task_id ON comments(task_id);
+CREATE INDEX idx_comments_author_id ON comments(author_id);
+CREATE INDEX idx_comments_created_at ON comments(created_at);
+
+-- Trigger for updated_at
+CREATE TRIGGER update_comments_updated_at
+BEFORE UPDATE ON comments
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- Row Level Security (RLS) for multi-tenancy
+-- ============================================
+
+ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
+
+-- Policy: users can only see comments of their own university
+CREATE POLICY comments_tenant_policy ON comments
+    FOR ALL
+    TO PUBLIC
+    USING (
+        university_id = COALESCE(current_setting('app.current_university_id', true)::bigint, university_id)
+    );
+
+-- ================================
+-- Deliverables Table
+-- ================================
+CREATE TABLE deliverables (
+    id BIGSERIAL PRIMARY KEY,
+    university_id BIGINT NOT NULL,
+
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    due_date TIMESTAMP,
+    submitted_at TIMESTAMP,
+    submission_notes VARCHAR(2000),
+    submission_file_url VARCHAR(500),
+    supervisor_feedback VARCHAR(2000),
+    supervisor_feedback_ar VARCHAR(2000),
+
+    -- Relationships
+    project_id BIGINT NOT NULL,
+
+    -- Audit fields
+    created_by VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(255),
+    updated_at TIMESTAMP,
+    version BIGINT DEFAULT 0,
+
+    -- Constraints
+    CONSTRAINT fk_deliverables_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    CONSTRAINT fk_deliverables_university FOREIGN KEY (university_id) REFERENCES universities(id) ON DELETE CASCADE
+);
+
+-- ============================================
+-- Indexes
+-- ============================================
+CREATE INDEX idx_deliverables_university_id ON deliverables(university_id);
+CREATE INDEX idx_deliverables_project_id ON deliverables(project_id);
+CREATE INDEX idx_deliverables_status ON deliverables(status);
+CREATE INDEX idx_deliverables_due_date ON deliverables(due_date);
+CREATE INDEX idx_deliverables_created_at ON deliverables(created_at);
+
+-- ============================================
+-- Trigger for updated_at
+-- ============================================
+CREATE TRIGGER update_deliverables_updated_at
+BEFORE UPDATE ON deliverables
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- Row Level Security (RLS) for multi-tenancy
+-- ============================================
+ALTER TABLE deliverables ENABLE ROW LEVEL SECURITY;
+
+-- Policy: users can only see deliverables of their own university
+CREATE POLICY deliverables_tenant_policy ON deliverables
+    FOR ALL
+    TO PUBLIC
+    USING (
+        university_id = COALESCE(current_setting('app.current_university_id', true)::bigint, university_id)
+    );
+
+
+-- ================================
+-- Notifications Table
+-- ================================
+CREATE TABLE notifications (
+    id BIGSERIAL PRIMARY KEY,
+    university_id BIGINT NOT NULL,
+
+    title VARCHAR(200) NOT NULL,
+    message VARCHAR(1000) NOT NULL,
+    read BOOLEAN NOT NULL DEFAULT FALSE,
+    type VARCHAR(50),
+
+    -- Relationships
+    user_id BIGINT NOT NULL,
+
+    -- Audit fields (from BaseEntity)
+    created_by VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(255),
+    updated_at TIMESTAMP,
+    version BIGINT DEFAULT 0,
+
+    -- Constraints
+    CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_notifications_university FOREIGN KEY (university_id) REFERENCES universities(id) ON DELETE CASCADE
+);
+
+-- ============================================
+-- Indexes
+-- ============================================
+CREATE INDEX idx_notifications_university_id ON notifications(university_id);
+CREATE INDEX idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX idx_notifications_read ON notifications(read);
+CREATE INDEX idx_notifications_created_at ON notifications(created_at);
+
+-- ============================================
+-- Trigger for updated_at
+-- ============================================
+CREATE TRIGGER update_notifications_updated_at
+BEFORE UPDATE ON notifications
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- Row Level Security (RLS) for multi-tenancy
+-- ============================================
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+-- Policy: users can only see notifications of their own university
+CREATE POLICY notifications_tenant_policy ON notifications
+    FOR ALL
+    TO PUBLIC
+    USING (
+        university_id = COALESCE(current_setting('app.current_university_id', true)::bigint, university_id)
+    );
+
+-- ================================
+-- Project Files Table
+-- ================================
+CREATE TABLE project_files (
+    id BIGSERIAL PRIMARY KEY,
+    university_id BIGINT NOT NULL,
+
+    project_id BIGINT NOT NULL,
+    filename VARCHAR(255) NOT NULL,
+    original_filename VARCHAR(255) NOT NULL,
+    content_type VARCHAR(150) NOT NULL,
+    file_size BIGINT NOT NULL,
+    storage_path VARCHAR(512) NOT NULL,
+    uploaded_by_user_id BIGINT NOT NULL,
+    uploaded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    -- Audit fields
+    created_by VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(255),
+    updated_at TIMESTAMP,
+    version BIGINT DEFAULT 0,
+
+    -- Constraints
+    CONSTRAINT fk_project_files_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    CONSTRAINT fk_project_files_user FOREIGN KEY (uploaded_by_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_project_files_university FOREIGN KEY (university_id) REFERENCES universities(id) ON DELETE CASCADE
+);
+
+-- ============================================
+-- Indexes
+-- ============================================
+CREATE INDEX idx_project_files_project ON project_files(project_id);
+CREATE INDEX idx_project_files_uploaded_by ON project_files(uploaded_by_user_id);
+CREATE INDEX idx_project_files_uploaded_at ON project_files(uploaded_at);
+CREATE INDEX idx_project_files_university_id ON project_files(university_id);
+
+-- ============================================
+-- Trigger for updated_at
+-- ============================================
+CREATE TRIGGER update_project_files_updated_at
+BEFORE UPDATE ON project_files
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- Row Level Security (RLS) for multi-tenancy
+-- ============================================
+ALTER TABLE project_files ENABLE ROW LEVEL SECURITY;
+
+-- Policy: users can only see project files of their own university
+CREATE POLICY project_files_tenant_policy ON project_files
+    FOR ALL
+    TO PUBLIC
+    USING (
+        university_id = COALESCE(current_setting('app.current_university_id', true)::bigint, university_id)
+    );
+
+
 COMMIT;
